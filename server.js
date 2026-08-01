@@ -43,51 +43,91 @@ function nowLabel() {
   return new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 }
 
-const baseInvestor = {
-  totalInvested: 13000,
-  currentPortfolio: 16968.3,
-  totalProfit: 3968.3,
-  todayPnl: 241.8,
-  monthlyReturn: 18.24,
-  overallReturn: 30.53,
-  healthScore: 91,
-  charges: {
-    brokerage: 0,
-    exchangeCharges: 13.84,
-    sebiCharges: 2.31,
-    gst: 2.91,
-    stampDuty: 5.48,
-    stt: 3.2,
-    dpCharges: 0,
-    platformFee: 25,
-    awsCost: 150
-  },
-  history: [
-    { date: '13 May 2026', investment: 5000, currentValue: 8236.74, profit: 3236.74, returnPct: 64.73, status: 'Active' },
-    { date: '13 Jul 2026', investment: 8000, currentValue: 8731.56, profit: 731.56, returnPct: 9.14, status: 'Active' }
-  ],
-  holdings: [
-    { symbol: 'NAVI', qty: 126, avg: 390, price: 422, pnl: 4032 },
-    { symbol: 'RELI', qty: 88, avg: 2480, price: 2640, pnl: 14080 },
-    { symbol: 'TCS', qty: 42, avg: 3650, price: 3810, pnl: 6720 }
-  ],
-  analytics: {
-    daily: 1.8,
-    weekly: 4.4,
-    monthly: 18.24,
-    yearly: 30.53,
-    cagr: 24.1,
-    drawdown: -7.6,
-    sharpe: 1.48,
-    winRate: 71,
-    allocation: [
-      { name: 'Technology', value: 38 },
-      { name: 'Financials', value: 24 },
-      { name: 'Energy', value: 18 },
-      { name: 'Healthcare', value: 20 }
-    ]
-  }
-};
+function calculateHoldingPeriod(investmentDate) {
+  const [day, monthName, year] = investmentDate.split(' ');
+  const monthMap = {
+    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+  };
+  const start = new Date(Number(year), monthMap[monthName], Number(day));
+  const now = new Date();
+  const days = Math.max(0, Math.floor((now - start) / (1000 * 60 * 60 * 24)));
+  return `${days} days`;
+}
+
+function buildInvestorProfile(config) {
+  const charges = {
+    brokerage: Number(config.charges?.brokerage ?? 0),
+    stt: Number(config.charges?.stt ?? 0),
+    exchangeCharges: Number(config.charges?.exchangeCharges ?? 0),
+    sebiCharges: Number(config.charges?.sebiCharges ?? 0),
+    stampDuty: Number(config.charges?.stampDuty ?? 0),
+    gst: Number(config.charges?.gst ?? 0),
+    platformFee: Number(config.charges?.platformFee ?? 0),
+    awsCost: Number(config.charges?.awsCost ?? 150)
+  };
+
+  const totalCharges = Number((charges.brokerage + charges.stt + charges.exchangeCharges + charges.sebiCharges + charges.stampDuty + charges.gst + charges.platformFee + charges.awsCost).toFixed(2));
+  const grossPortfolioValue = Number(config.currentPortfolioValue ?? 0);
+  const netPortfolioValue = Number((grossPortfolioValue - totalCharges).toFixed(2));
+  const netProfit = Number((netPortfolioValue - config.capitalInvested).toFixed(2));
+  const overallReturnAfterCharges = Number(((netProfit / config.capitalInvested) * 100).toFixed(2));
+  const holdingPeriod = calculateHoldingPeriod(config.investmentDate);
+
+  return {
+    investorId: config.investorId,
+    accountType: config.accountType,
+    kycStatus: config.kycStatus,
+    accountStatus: config.accountStatus,
+    riskProfile: config.riskProfile,
+    portfolioManager: config.portfolioManager,
+    clientSince: config.clientSince,
+    investmentDate: config.investmentDate,
+    capitalInvested: Number(config.capitalInvested),
+    currentPortfolioValue: grossPortfolioValue,
+    unrealizedProfit: Number(config.unrealizedProfit ?? 0),
+    overallReturn: Number(config.overallReturn ?? 0),
+    holdingPeriod,
+    investmentStatus: config.investmentStatus,
+    charges,
+    totalCharges,
+    netPortfolioValue,
+    netProfitAfterCharges: netProfit,
+    overallReturnAfterCharges,
+    healthScore: 94,
+    history: [
+      {
+        date: config.investmentDate,
+        investment: Number(config.capitalInvested),
+        currentValue: grossPortfolioValue,
+        profit: Number(config.unrealizedProfit ?? 0),
+        returnPct: Number(config.overallReturn ?? 0),
+        status: config.investmentStatus
+      }
+    ],
+    holdings: [
+      { symbol: 'NIFTY', qty: 12, avg: 22000, price: 22850, pnl: 10200 },
+      { symbol: 'BANKNIFTY', qty: 8, avg: 49000, price: 50750, pnl: 14000 },
+      { symbol: 'RELIANCE', qty: 26, avg: 2440, price: 2520, pnl: 2080 }
+    ],
+    analytics: {
+      daily: 2.1,
+      weekly: 4.4,
+      monthly: 10.6,
+      yearly: 105.66,
+      cagr: 68.3,
+      drawdown: -4.7,
+      sharpe: 1.62,
+      winRate: 74,
+      allocation: [
+        { name: 'Technology', value: 42 },
+        { name: 'Financials', value: 27 },
+        { name: 'Energy', value: 18 },
+        { name: 'Healthcare', value: 13 }
+      ]
+    }
+  };
+}
 
 const seedUsers = [
   {
@@ -100,33 +140,81 @@ const seedUsers = [
     pan: 'ABCDE1234F',
     kyc: 'Verified',
     nominee: 'Asha Pundeer',
-    joiningDate: '01 Jan 2025',
-    ...baseInvestor,
-    totalInvested: 13000,
-    currentPortfolio: 16968.3,
-    totalProfit: 3968.3,
-    todayPnl: 241.8,
-    monthlyReturn: 18.24,
-    overallReturn: 30.53
+    joiningDate: '01 Jan 2025'
   },
   {
-    id: 'investor-1',
-    name: 'Kapil Kaushik',
-    email: 'kapilllkaushik09@gmail.com',
-    password: createHash('Kapil@2026'),
+    id: 'investor-1002',
+    name: 'Anuj',
+    email: 'anni44600@gmail.com',
+    password: createHash('Anuj@2026'),
     role: 'investor',
-    phone: '+91 82910 12345',
-    pan: 'PQRST1234A',
-    kyc: 'Pending Review',
-    nominee: 'Ritu Kaushik',
-    joiningDate: '13 Jul 2026',
-    ...baseInvestor,
-    totalInvested: 13000,
-    currentPortfolio: 16968.3,
-    totalProfit: 3968.3,
-    todayPnl: 241.8,
-    monthlyReturn: 18.24,
-    overallReturn: 30.53
+    phone: '+91 98765 11111',
+    pan: 'ANUJ1234A',
+    kyc: 'Verified',
+    nominee: 'Asha Anuj',
+    joiningDate: '15 Apr 2026',
+    ...buildInvestorProfile({
+      investorId: 'BB-1002',
+      accountType: 'Individual Investor',
+      kycStatus: 'Verified',
+      accountStatus: 'Active',
+      riskProfile: 'Moderately Aggressive',
+      portfolioManager: 'BLACKBUSER Quantitative Fund',
+      clientSince: '15 April 2026',
+      investmentDate: '15 Apr 2026',
+      capitalInvested: 5000,
+      currentPortfolioValue: 10487.82,
+      unrealizedProfit: 5487.82,
+      overallReturn: 109.76,
+      investmentStatus: 'Active',
+      charges: {
+        brokerage: 0,
+        stt: 18.92,
+        exchangeCharges: 5.84,
+        sebiCharges: 0.10,
+        stampDuty: 3.84,
+        gst: 1.08,
+        platformFee: 25,
+        awsCost: 150
+      }
+    })
+  },
+  {
+    id: 'investor-1003',
+    name: 'Himanshu',
+    email: 'hritikmishra726@gmail.com',
+    password: createHash('Himanshu@2026'),
+    role: 'investor',
+    phone: '+91 98765 22222',
+    pan: 'HIMU1234A',
+    kyc: 'Verified',
+    nominee: 'Rita Himanshu',
+    joiningDate: '20 Apr 2026',
+    ...buildInvestorProfile({
+      investorId: 'BB-1003',
+      accountType: 'Individual Investor',
+      kycStatus: 'Verified',
+      accountStatus: 'Active',
+      riskProfile: 'Aggressive',
+      portfolioManager: 'BLACKBUSER Quantitative Fund',
+      clientSince: '20 April 2026',
+      investmentDate: '20 Apr 2026',
+      capitalInvested: 5000,
+      currentPortfolioValue: 10318.49,
+      unrealizedProfit: 5318.49,
+      overallReturn: 106.37,
+      investmentStatus: 'Active',
+      charges: {
+        brokerage: 0,
+        stt: 18.36,
+        exchangeCharges: 5.69,
+        sebiCharges: 0.10,
+        stampDuty: 3.79,
+        gst: 1.05,
+        platformFee: 25,
+        awsCost: 150
+      }
+    })
   }
 ];
 
@@ -154,32 +242,33 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => res.json({ ok: true }));
 
 app.get('/login', (req, res) => {
-  res.render('login', { mode: 'login', message: '', user: req.session.user, otp: null, email: '' });
+  res.render('login', { mode: 'login', message: '', user: req.session.user, otp: null, email: '', otpEmail: '' });
 });
 
 app.get('/register', (req, res) => {
-  res.render('login', { mode: 'register', message: '', user: req.session.user, otp: null, email: '' });
+  res.render('login', { mode: 'register', message: '', user: req.session.user, otp: null, email: '', otpEmail: '' });
 });
 
 app.get('/forgot', (req, res) => {
-  res.render('login', { mode: 'forgot', message: '', user: req.session.user, otp: null, email: '' });
+  res.render('login', { mode: 'forgot', message: '', user: req.session.user, otp: null, email: '', otpEmail: '' });
 });
 
 app.post('/register', (req, res) => {
   const { name, email, password } = req.body;
-  if (!name || !email || !password) {
-    return res.render('login', { mode: 'register', message: 'Complete all fields to proceed.', user: req.session.user, otp: null, email });
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  if (!name || !normalizedEmail || !password) {
+    return res.render('login', { mode: 'register', message: 'Complete all fields to proceed.', user: req.session.user, otp: null, email: normalizedEmail, otpEmail: '' });
   }
 
-  if (users.some((user) => user.email.toLowerCase() === email.toLowerCase())) {
-    return res.render('login', { mode: 'register', message: 'This email already has an account.', user: req.session.user, otp: null, email });
+  if (users.some((user) => user.email.toLowerCase() === normalizedEmail)) {
+    return res.render('login', { mode: 'register', message: 'This email already has an account.', user: req.session.user, otp: null, email: normalizedEmail, otpEmail: '' });
   }
 
   const otp = String(Math.floor(100000 + Math.random() * 900000));
-  pending[email.toLowerCase()] = {
+  pending[normalizedEmail] = {
     type: 'register',
     name,
-    email: email.toLowerCase(),
+    email: normalizedEmail,
     password: createHash(password),
     otp,
     expiresAt: Date.now() + 5 * 60 * 1000
@@ -187,18 +276,20 @@ app.post('/register', (req, res) => {
 
   res.render('login', {
     mode: 'verify',
-    message: `OTP sent to ${email}. Use code ${otp} to verify your account.`,
+    message: `OTP sent to ${normalizedEmail}. Use code ${otp} to verify your account.`,
     user: req.session.user,
     otp,
-    email: email.toLowerCase()
+    email: normalizedEmail,
+    otpEmail: ''
   });
 });
 
 app.post('/verify', (req, res) => {
   const { email, otp } = req.body;
-  const record = pending[email.toLowerCase()];
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const record = pending[normalizedEmail];
   if (!record || record.otp !== otp || Date.now() > record.expiresAt) {
-    return res.render('login', { mode: 'verify', message: 'The OTP is invalid or expired.', user: req.session.user, otp: null, email });
+    return res.render('login', { mode: 'verify', message: 'The OTP is invalid or expired.', user: req.session.user, otp: null, email: normalizedEmail, otpEmail: '' });
   }
 
   const newUser = {
@@ -226,56 +317,103 @@ app.post('/verify', (req, res) => {
   };
 
   users.push(newUser);
-  delete pending[email.toLowerCase()];
+  delete pending[normalizedEmail];
   req.session.user = newUser;
   return res.redirect('/dashboard');
 });
 
 app.post('/login', (req, res) => {
   const { email, password } = req.body;
-  const user = users.find((item) => item.email.toLowerCase() === email.toLowerCase());
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const user = users.find((item) => item.email.toLowerCase() === normalizedEmail);
   if (!user || !verifyHash(password, user.password)) {
-    return res.render('login', { mode: 'login', message: 'Invalid email or password.', user: req.session.user, otp: null, email });
+    return res.render('login', { mode: 'login', message: 'Invalid email or password.', user: req.session.user, otp: null, email: normalizedEmail, otpEmail: '' });
   }
 
   req.session.user = user;
   return res.redirect('/dashboard');
 });
 
-app.post('/forgot', (req, res) => {
-  const { email } = req.body;
-  const user = users.find((item) => item.email.toLowerCase() === email.toLowerCase());
+app.post('/send-login-otp', (req, res) => {
+  const normalizedEmail = String(req.body.email || '').trim().toLowerCase();
+  const user = users.find((item) => item.email.toLowerCase() === normalizedEmail);
   if (!user) {
-    return res.render('login', { mode: 'forgot', message: 'No account was found for that email.', user: req.session.user, otp: null, email });
+    return res.render('login', { mode: 'login', message: 'No account was found for that email.', user: req.session.user, otp: null, email: normalizedEmail, otpEmail: normalizedEmail });
   }
 
   const otp = String(Math.floor(100000 + Math.random() * 900000));
-  pending[email.toLowerCase()] = { type: 'reset', email: email.toLowerCase(), otp, expiresAt: Date.now() + 5 * 60 * 1000 };
+  pending[normalizedEmail] = {
+    type: 'login',
+    email: normalizedEmail,
+    otp,
+    expiresAt: Date.now() + 5 * 60 * 1000
+  };
+
+  res.render('login', {
+    mode: 'login',
+    message: `OTP sent to ${normalizedEmail}. Enter the code below to continue.`,
+    user: req.session.user,
+    otp,
+    email: normalizedEmail,
+    otpEmail: normalizedEmail
+  });
+});
+
+app.post('/verify-login-otp', (req, res) => {
+  const normalizedEmail = String(req.body.email || '').trim().toLowerCase();
+  const otp = String(req.body.otp || '').trim();
+  const record = pending[normalizedEmail];
+  if (!record || record.type !== 'login' || record.otp !== otp || Date.now() > record.expiresAt) {
+    return res.render('login', { mode: 'login', message: 'The OTP is invalid or expired.', user: req.session.user, otp: null, email: normalizedEmail, otpEmail: normalizedEmail });
+  }
+
+  const user = users.find((item) => item.email.toLowerCase() === normalizedEmail);
+  if (!user) {
+    return res.render('login', { mode: 'login', message: 'No matching account was found.', user: req.session.user, otp: null, email: normalizedEmail, otpEmail: normalizedEmail });
+  }
+
+  delete pending[normalizedEmail];
+  req.session.user = user;
+  return res.redirect('/dashboard');
+});
+
+app.post('/forgot', (req, res) => {
+  const { email } = req.body;
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const user = users.find((item) => item.email.toLowerCase() === normalizedEmail);
+  if (!user) {
+    return res.render('login', { mode: 'forgot', message: 'No account was found for that email.', user: req.session.user, otp: null, email: normalizedEmail, otpEmail: '' });
+  }
+
+  const otp = String(Math.floor(100000 + Math.random() * 900000));
+  pending[normalizedEmail] = { type: 'reset', email: normalizedEmail, otp, expiresAt: Date.now() + 5 * 60 * 1000 };
 
   res.render('login', {
     mode: 'reset',
-    message: `Reset OTP sent to ${email}. Use code ${otp} to set a new password.`,
+    message: `Reset OTP sent to ${normalizedEmail}. Use code ${otp} to set a new password.`,
     user: req.session.user,
     otp,
-    email: email.toLowerCase()
+    email: normalizedEmail,
+    otpEmail: ''
   });
 });
 
 app.post('/reset', (req, res) => {
   const { email, otp, password } = req.body;
-  const record = pending[email.toLowerCase()];
+  const normalizedEmail = String(email || '').trim().toLowerCase();
+  const record = pending[normalizedEmail];
   if (!record || record.otp !== otp || Date.now() > record.expiresAt) {
-    return res.render('login', { mode: 'reset', message: 'The reset code is invalid or expired.', user: req.session.user, otp: null, email });
+    return res.render('login', { mode: 'reset', message: 'The reset code is invalid or expired.', user: req.session.user, otp: null, email: normalizedEmail, otpEmail: '' });
   }
 
-  const user = users.find((item) => item.email.toLowerCase() === email.toLowerCase());
+  const user = users.find((item) => item.email.toLowerCase() === normalizedEmail);
   if (!user) {
-    return res.render('login', { mode: 'reset', message: 'No matching account was found.', user: req.session.user, otp: null, email });
+    return res.render('login', { mode: 'reset', message: 'No matching account was found.', user: req.session.user, otp: null, email: normalizedEmail, otpEmail: '' });
   }
 
   user.password = createHash(password);
-  delete pending[email.toLowerCase()];
-  res.render('login', { mode: 'login', message: 'Password updated successfully. Please log in.', user: req.session.user, otp: null, email });
+  delete pending[normalizedEmail];
+  res.render('login', { mode: 'login', message: 'Password updated successfully. Please log in.', user: req.session.user, otp: null, email: normalizedEmail, otpEmail: '' });
 });
 
 app.get('/logout', (req, res) => {

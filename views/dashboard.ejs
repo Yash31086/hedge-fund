@@ -33,30 +33,61 @@
           <div class="timestamp"><%= nowLabel() %></div>
         </header>
 
+        <section class="profile-grid">
+          <article class="panel-card">
+            <div class="panel-title">
+              <h3>Investor profile</h3>
+              <span class="score"><%= data.user.accountStatus %></span>
+            </div>
+            <div class="profile-list">
+              <div><span>Investor ID</span><strong><%= data.user.investorId %></strong></div>
+              <div><span>Account Type</span><strong><%= data.user.accountType %></strong></div>
+              <div><span>KYC Status</span><strong><%= data.user.kycStatus %></strong></div>
+              <div><span>Risk Profile</span><strong><%= data.user.riskProfile %></strong></div>
+              <div><span>Portfolio Manager</span><strong><%= data.user.portfolioManager %></strong></div>
+              <div><span>Client Since</span><strong><%= data.user.clientSince %></strong></div>
+            </div>
+          </article>
+          <article class="panel-card">
+            <div class="panel-title">
+              <h3>Portfolio summary</h3>
+              <span class="score"><%= pct(data.user.overallReturnAfterCharges) %></span>
+            </div>
+            <div class="summary-list">
+              <div><span>Total Capital Invested</span><strong><%= currency(data.user.capitalInvested) %></strong></div>
+              <div><span>Gross Portfolio Value</span><strong><%= currency(data.user.currentPortfolioValue) %></strong></div>
+              <div><span>Net Portfolio Value</span><strong><%= currency(data.user.netPortfolioValue) %></strong></div>
+              <div><span>Net Profit After Charges</span><strong><%= currency(data.user.netProfitAfterCharges) %></strong></div>
+              <div><span>Overall Return After Charges</span><strong><%= pct(data.user.overallReturnAfterCharges) %></strong></div>
+              <div><span>Holding Period</span><strong><%= data.user.holdingPeriod %></strong></div>
+            </div>
+          </article>
+        </section>
+
         <section class="stats-grid">
           <article class="metric-card">
             <span>Total Invested</span>
-            <strong><%= currency(data.user.totalInvested) %></strong>
+            <strong><%= currency(data.user.capitalInvested) %></strong>
           </article>
           <article class="metric-card">
             <span>Portfolio Value</span>
-            <strong><%= currency(data.user.currentPortfolio) %></strong>
+            <strong><%= currency(data.user.currentPortfolioValue) %></strong>
           </article>
           <article class="metric-card">
-            <span>Total Profit</span>
-            <strong><%= currency(data.user.totalProfit) %></strong>
+            <span>Unrealized Profit</span>
+            <strong><%= currency(data.user.unrealizedProfit) %></strong>
           </article>
           <article class="metric-card">
-            <span>Today's P&amp;L</span>
-            <strong><%= currency(data.user.todayPnl) %></strong>
-          </article>
-          <article class="metric-card">
-            <span>Monthly Return</span>
-            <strong><%= pct(data.user.monthlyReturn) %></strong>
+            <span>Net Profit</span>
+            <strong><%= currency(data.user.netProfitAfterCharges) %></strong>
           </article>
           <article class="metric-card">
             <span>Overall Return</span>
             <strong><%= pct(data.user.overallReturn) %></strong>
+          </article>
+          <article class="metric-card">
+            <span>Health Score</span>
+            <strong><%= data.user.healthScore %>/100</strong>
           </article>
         </section>
 
@@ -123,13 +154,14 @@
             </div>
             <ul class="charge-list">
               <li>Brokerage: <span><%= currency(data.user.charges.brokerage) %></span></li>
-              <li>Exchange Charges: <span><%= currency(data.user.charges.exchangeCharges) %></span></li>
-              <li>SEBI Charges: <span><%= currency(data.user.charges.sebiCharges) %></span></li>
-              <li>GST: <span><%= currency(data.user.charges.gst) %></span></li>
-              <li>Stamp Duty: <span><%= currency(data.user.charges.stampDuty) %></span></li>
               <li>STT: <span><%= currency(data.user.charges.stt) %></span></li>
-              <li>Platform Fee: <span><%= currency(data.user.charges.platformFee) %></span></li>
-              <li>AWS Cost Allocation: <span><%= currency(data.user.charges.awsCost) %></span></li>
+              <li>Exchange Transaction Charges: <span><%= currency(data.user.charges.exchangeCharges) %></span></li>
+              <li>SEBI Turnover Charges: <span><%= currency(data.user.charges.sebiCharges) %></span></li>
+              <li>Stamp Duty: <span><%= currency(data.user.charges.stampDuty) %></span></li>
+              <li>GST: <span><%= currency(data.user.charges.gst) %></span></li>
+              <li>Platform Maintenance Fee: <span><%= currency(data.user.charges.platformFee) %></span></li>
+              <li>AWS Infrastructure Allocation: <span><%= currency(data.user.charges.awsCost) %></span></li>
+              <li class="highlight">Total Charges: <span><%= currency(data.user.totalCharges) %></span></li>
             </ul>
           </article>
 

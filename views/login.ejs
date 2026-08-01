@@ -18,12 +18,35 @@
       <% } %>
 
       <% if (mode === 'login') { %>
-        <form action="/login" method="POST">
-          <h2>Sign in</h2>
-          <input type="email" name="email" placeholder="Email" value="<%= email %>" required />
-          <input type="password" name="password" placeholder="Password" required />
-          <button type="submit">Enter Dashboard</button>
-        </form>
+        <div class="auth-toggle" role="tablist" aria-label="Sign in method">
+          <button class="auth-toggle-btn active" type="button" data-target="password-panel">Password</button>
+          <button class="auth-toggle-btn" type="button" data-target="otp-panel">OTP</button>
+        </div>
+
+        <div id="password-panel" class="auth-mode-panel active">
+          <form action="/login" method="POST">
+            <input type="hidden" name="method" value="password" />
+            <h2>Sign in with password</h2>
+            <input type="email" name="email" placeholder="Email" value="<%= email %>" required />
+            <input type="password" name="password" placeholder="Password" required />
+            <button type="submit">Enter Dashboard</button>
+          </form>
+        </div>
+
+        <div id="otp-panel" class="auth-mode-panel">
+          <form action="/send-login-otp" method="POST">
+            <h2>Sign in with OTP</h2>
+            <input type="email" name="email" placeholder="Registered email" value="<%= otpEmail || email %>" required />
+            <button type="submit">Send one-time code</button>
+          </form>
+
+          <form action="/verify-login-otp" method="POST" class="otp-verify-form">
+            <input type="email" name="email" placeholder="Registered email" value="<%= otpEmail || email %>" required />
+            <input type="text" name="otp" placeholder="6-digit OTP" maxlength="6" required />
+            <button type="submit">Verify & enter</button>
+          </form>
+        </div>
+
         <div class="auth-links">
           <a href="/register">Create account</a>
           <a href="/forgot">Forgot password</a>
@@ -59,5 +82,18 @@
         </form>
       <% } %>
     </div>
+
+    <script>
+      const toggleButtons = document.querySelectorAll('.auth-toggle-btn');
+      const panels = document.querySelectorAll('.auth-mode-panel');
+
+      toggleButtons.forEach((button) => {
+        button.addEventListener('click', () => {
+          toggleButtons.forEach((btn) => btn.classList.toggle('active', btn === button));
+          const target = button.getAttribute('data-target');
+          panels.forEach((panel) => panel.classList.toggle('active', panel.id === target));
+        });
+      });
+    </script>
   </body>
 </html>
