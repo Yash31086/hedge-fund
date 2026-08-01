@@ -43,6 +43,15 @@ function nowLabel() {
   return new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
 }
 
+function getMarketStatus() {
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  const day = now.getDay();
+  const minutes = now.getHours() * 60 + now.getMinutes();
+  const isTradingDay = day >= 1 && day <= 5;
+  const isTradingHours = minutes >= 9 * 60 + 15 && minutes <= 15 * 60 + 30;
+  return isTradingDay && isTradingHours ? 'LIVE' : 'MARKET CLOSED';
+}
+
 function calculateHoldingPeriod(investmentDate) {
   const [day, monthName, year] = investmentDate.split(' ');
   const monthMap = {
@@ -73,6 +82,16 @@ function buildInvestorProfile(config) {
   const netProfit = Number((netPortfolioValue - config.capitalInvested).toFixed(2));
   const overallReturnAfterCharges = Number(((netProfit / config.capitalInvested) * 100).toFixed(2));
   const holdingPeriod = calculateHoldingPeriod(config.investmentDate);
+  const history = Array.isArray(config.history) && config.history.length > 0
+    ? config.history
+    : [{
+        date: config.investmentDate,
+        investment: Number(config.capitalInvested),
+        currentValue: grossPortfolioValue,
+        profit: Number(config.unrealizedProfit ?? 0),
+        returnPct: Number(config.overallReturn ?? 0),
+        status: config.investmentStatus
+      }];
 
   return {
     investorId: config.investorId,
@@ -95,16 +114,9 @@ function buildInvestorProfile(config) {
     netProfitAfterCharges: netProfit,
     overallReturnAfterCharges,
     healthScore: 94,
-    history: [
-      {
-        date: config.investmentDate,
-        investment: Number(config.capitalInvested),
-        currentValue: grossPortfolioValue,
-        profit: Number(config.unrealizedProfit ?? 0),
-        returnPct: Number(config.overallReturn ?? 0),
-        status: config.investmentStatus
-      }
-    ],
+    portfolioStatus: config.portfolioStatus ?? 'Active',
+    lastPortfolioUpdate: config.lastPortfolioUpdate ?? nowLabel(),
+    history,
     holdings: [
       { symbol: 'NIFTY', qty: 12, avg: 22000, price: 22850, pnl: 10200 },
       { symbol: 'BANKNIFTY', qty: 8, avg: 49000, price: 50750, pnl: 14000 },
@@ -219,35 +231,55 @@ const seedUsers = [
   {
     id: 'investor-1004',
     name: 'Kapil Kaushik',
-    email: 'kapilkaushik@example.com',
+    email: 'kapilllkaushik09@gmail.com',
     password: createHash('Kapil@2026'),
     role: 'investor',
     phone: '+91 98765 33333',
     pan: 'KAPI1234K',
     kyc: 'Verified',
     nominee: 'Neha Kaushik',
-    joiningDate: '25 Apr 2026',
+    joiningDate: '13 May 2026',
     ...buildInvestorProfile({
-      investorId: 'BB-1004',
+      investorId: 'BB-1001',
       accountType: 'Individual Investor',
       kycStatus: 'Verified',
       accountStatus: 'Active',
-      riskProfile: 'Balanced',
+      riskProfile: 'Moderate',
       portfolioManager: 'BLACKBUSER Quantitative Fund',
-      clientSince: '25 April 2026',
-      investmentDate: '25 Apr 2026',
-      capitalInvested: 5000,
-      currentPortfolioValue: 10124.18,
-      unrealizedProfit: 5124.18,
-      overallReturn: 102.48,
+      clientSince: '13 May 2026',
+      investmentDate: '13 May 2026',
+      capitalInvested: 13000,
+      currentPortfolioValue: 16968.30,
+      unrealizedProfit: 3968.30,
+      overallReturn: 30.53,
       investmentStatus: 'Active',
+      portfolioStatus: 'Active',
+      lastPortfolioUpdate: nowLabel(),
+      history: [
+        {
+          date: '13 May 2026',
+          investment: 5000,
+          currentValue: 8236.74,
+          profit: 3236.74,
+          returnPct: 64.73,
+          status: 'Active'
+        },
+        {
+          date: '13 July 2026',
+          investment: 8000,
+          currentValue: 8731.56,
+          profit: 731.56,
+          returnPct: 9.14,
+          status: 'Active'
+        }
+      ],
       charges: {
         brokerage: 0,
-        stt: 18.10,
-        exchangeCharges: 5.59,
-        sebiCharges: 0.10,
-        stampDuty: 3.72,
-        gst: 1.02,
+        stt: 19.28,
+        exchangeCharges: 6.02,
+        sebiCharges: 0.11,
+        stampDuty: 4.08,
+        gst: 1.11,
         platformFee: 25,
         awsCost: 150
       }
@@ -472,7 +504,7 @@ app.get('/dashboard', requireAuth, (req, res) => {
       portfolio: item.currentPortfolio,
       profit: item.totalProfit
     })),
-    marketStatus: 'LIVE',
+    marketStatus: getMarketStatus(),
     insights: [
       'Live market pulse active',
       'Capital deployment balanced across sectors',

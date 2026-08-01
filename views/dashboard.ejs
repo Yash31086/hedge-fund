@@ -17,6 +17,8 @@
           <h3><%= data.user.name %></h3>
           <p><%= data.user.email %></p>
           <span class="status-badge"><%= data.marketStatus %></span>
+          <p class="muted">Portfolio Status: <strong><%= data.user.portfolioStatus %></strong></p>
+          <p class="muted">Last Sync: <strong><%= data.user.lastPortfolioUpdate %></strong></p>
         </div>
         <nav class="side-nav">
           <a href="/dashboard">Overview</a>
@@ -43,9 +45,11 @@
               <div><span>Investor ID</span><strong><%= data.user.investorId %></strong></div>
               <div><span>Account Type</span><strong><%= data.user.accountType %></strong></div>
               <div><span>KYC Status</span><strong><%= data.user.kycStatus %></strong></div>
+              <div><span>Email</span><strong><%= data.user.email %></strong></div>
               <div><span>Risk Profile</span><strong><%= data.user.riskProfile %></strong></div>
               <div><span>Portfolio Manager</span><strong><%= data.user.portfolioManager %></strong></div>
               <div><span>Client Since</span><strong><%= data.user.clientSince %></strong></div>
+              <div><span>Last Portfolio Update</span><strong><%= data.user.lastPortfolioUpdate %></strong></div>
             </div>
           </article>
           <article class="panel-card">
