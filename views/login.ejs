@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BLACKBUSER | Access Portal</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body class="auth-body">
+    <div class="auth-card">
+      <div class="auth-header">
+        <a class="brand" href="/">BLACKBUSER</a>
+        <p>Controlled access for investors and administrators.</p>
+      </div>
+
+      <% if (message) { %>
+        <div class="message"><%= message %></div>
+      <% } %>
+
+      <% if (mode === 'login') { %>
+        <form action="/login" method="POST">
+          <h2>Sign in</h2>
+          <input type="email" name="email" placeholder="Email" value="<%= email %>" required />
+          <input type="password" name="password" placeholder="Password" required />
+          <button type="submit">Enter Dashboard</button>
+        </form>
+        <div class="auth-links">
+          <a href="/register">Create account</a>
+          <a href="/forgot">Forgot password</a>
+        </div>
+      <% } else if (mode === 'register') { %>
+        <form action="/register" method="POST">
+          <h2>Create account</h2>
+          <input type="text" name="name" placeholder="Full name" required />
+          <input type="email" name="email" placeholder="Email" required />
+          <input type="password" name="password" placeholder="Password" required />
+          <button type="submit">Send OTP</button>
+        </form>
+      <% } else if (mode === 'verify') { %>
+        <form action="/verify" method="POST">
+          <h2>Verify account</h2>
+          <input type="email" name="email" value="<%= email %>" required />
+          <input type="text" name="otp" placeholder="6-digit OTP" maxlength="6" required />
+          <button type="submit">Confirm</button>
+        </form>
+      <% } else if (mode === 'forgot') { %>
+        <form action="/forgot" method="POST">
+          <h2>Recover access</h2>
+          <input type="email" name="email" placeholder="Registered email" required />
+          <button type="submit">Send reset OTP</button>
+        </form>
+      <% } else if (mode === 'reset') { %>
+        <form action="/reset" method="POST">
+          <h2>Set new password</h2>
+          <input type="email" name="email" value="<%= email %>" required />
+          <input type="text" name="otp" placeholder="6-digit OTP" maxlength="6" required />
+          <input type="password" name="password" placeholder="New password" required />
+          <button type="submit">Reset password</button>
+        </form>
+      <% } %>
+    </div>
+  </body>
+</html>
