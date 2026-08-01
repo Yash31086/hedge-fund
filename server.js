@@ -215,6 +215,43 @@ const seedUsers = [
         awsCost: 150
       }
     })
+  },
+  {
+    id: 'investor-1004',
+    name: 'Kapil Kaushik',
+    email: 'kapilkaushik@example.com',
+    password: createHash('Kapil@2026'),
+    role: 'investor',
+    phone: '+91 98765 33333',
+    pan: 'KAPI1234K',
+    kyc: 'Verified',
+    nominee: 'Neha Kaushik',
+    joiningDate: '25 Apr 2026',
+    ...buildInvestorProfile({
+      investorId: 'BB-1004',
+      accountType: 'Individual Investor',
+      kycStatus: 'Verified',
+      accountStatus: 'Active',
+      riskProfile: 'Balanced',
+      portfolioManager: 'BLACKBUSER Quantitative Fund',
+      clientSince: '25 April 2026',
+      investmentDate: '25 Apr 2026',
+      capitalInvested: 5000,
+      currentPortfolioValue: 10124.18,
+      unrealizedProfit: 5124.18,
+      overallReturn: 102.48,
+      investmentStatus: 'Active',
+      charges: {
+        brokerage: 0,
+        stt: 18.10,
+        exchangeCharges: 5.59,
+        sebiCharges: 0.10,
+        stampDuty: 3.72,
+        gst: 1.02,
+        platformFee: 25,
+        awsCost: 150
+      }
+    })
   }
 ];
 
