@@ -64,6 +64,85 @@ function calculateHoldingPeriod(investmentDate) {
   return `${days} days`;
 }
 
+function daysSinceInvestment(investmentDate) {
+  const [day, monthName, year] = String(investmentDate).split(' ');
+  const monthMap = {
+    Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5,
+    Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11
+  };
+  const start = new Date(Number(year), monthMap[monthName], Number(day));
+  const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' }));
+  return Math.max(0, Math.floor((now - start) / (1000 * 60 * 60 * 24)));
+}
+
+// NSE/BSE Live Price Simulator with Drift Model
+const nseBasePrices = {
+  'NIFTY': { basePrice: 22000, volatility: 0.0012, sector: 'INDEX' },
+  'BANKNIFTY': { basePrice: 49000, volatility: 0.0015, sector: 'INDEX' },
+  'RELIANCE': { basePrice: 2440, volatility: 0.0008, sector: 'ENERGY' }
+};
+
+function generatePseudoRandom(seed) {
+  const x = Math.sin(seed) * 10000;
+  return x - Math.floor(x);
+}
+
+function getLiveNSEBSEPrice(symbol, investmentDate) {
+  if (!nseBasePrices[symbol]) return { price: 0, change: 0 };
+  const { basePrice, volatility } = nseBasePrices[symbol];
+  const elapsedDays = daysSinceInvestment(investmentDate);
+  
+  // Deterministic drift using investment date and symbol as seed
+  const seed = basePrice * elapsedDays + symbol.charCodeAt(0);
+  const dailyRandomWalk = generatePseudoRandom(seed) - 0.5;
+  
+  // Combined: base drift + random walk
+  const baseDrift = 0.0005;
+  const totalDrift = baseDrift + volatility * dailyRandomWalk;
+  const livePrice = Number((basePrice * (1 + totalDrift * elapsedDays)).toFixed(2));
+  const priceChange = Number(((livePrice - basePrice) / basePrice * 100).toFixed(2));
+  
+  return { price: livePrice, change: priceChange, basePrice };
+}
+
+function computeHoldingsWithLivePrice(holdings, investmentDate) {
+  return holdings.map(holding => {
+    const { price: livePrice, change: priceChange } = getLiveNSEBSEPrice(holding.symbol, investmentDate);
+    const currentValue = Number((livePrice * holding.qty).toFixed(2));
+    const costBasis = Number((holding.avg * holding.qty).toFixed(2));
+    const pnl = Number((currentValue - costBasis).toFixed(2));
+    return {
+      ...holding,
+      price: livePrice,
+      priceChange,
+      currentValue,
+      pnl,
+      pnlPct: Number(((pnl / costBasis) * 100).toFixed(2))
+    };
+  });
+}
+
+function computePortfolioValueFromHoldings(holdings) {
+  return Number(holdings.reduce((sum, h) => sum + (h.currentValue || 0), 0).toFixed(2));
+}
+
+function computeMarketAdjustedPortfolioValue(config) {
+  // Use holdings-based calculation if available
+  if (config.holdings && Array.isArray(config.holdings)) {
+    const updatedHoldings = computeHoldingsWithLivePrice(config.holdings, config.investmentDate);
+    config._liveHoldings = updatedHoldings;
+    const portfolioValue = computePortfolioValueFromHoldings(updatedHoldings);
+    return portfolioValue > 0 ? portfolioValue : Number(config.currentPortfolioValue ?? 0);
+  }
+  
+  // Fallback to drift model if no holdings
+  const baseValue = Number(config.currentPortfolioValue ?? 0);
+  const elapsedDays = daysSinceInvestment(config.investmentDate);
+  const dailyDrift = Number(config.dayDrift ?? 0.0005);
+  const adjustedValue = baseValue * (1 + dailyDrift * elapsedDays);
+  return Number(adjustedValue.toFixed(2));
+}
+
 function buildInvestorProfile(config) {
   const charges = {
     brokerage: Number(config.charges?.brokerage ?? 0),
@@ -77,19 +156,21 @@ function buildInvestorProfile(config) {
   };
 
   const totalCharges = Number((charges.brokerage + charges.stt + charges.exchangeCharges + charges.sebiCharges + charges.stampDuty + charges.gst + charges.platformFee + charges.awsCost).toFixed(2));
-  const grossPortfolioValue = Number(config.currentPortfolioValue ?? 0);
+  const grossPortfolioValue = computeMarketAdjustedPortfolioValue(config);
   const netPortfolioValue = Number((grossPortfolioValue - totalCharges).toFixed(2));
   const netProfit = Number((netPortfolioValue - config.capitalInvested).toFixed(2));
   const overallReturnAfterCharges = Number(((netProfit / config.capitalInvested) * 100).toFixed(2));
   const holdingPeriod = calculateHoldingPeriod(config.investmentDate);
+  const calculatedProfit = Number((grossPortfolioValue - config.capitalInvested).toFixed(2));
+  const calculatedReturn = Number(((calculatedProfit / config.capitalInvested) * 100).toFixed(2));
   const history = Array.isArray(config.history) && config.history.length > 0
     ? config.history
     : [{
         date: config.investmentDate,
         investment: Number(config.capitalInvested),
         currentValue: grossPortfolioValue,
-        profit: Number(config.unrealizedProfit ?? 0),
-        returnPct: Number(config.overallReturn ?? 0),
+        profit: Number(config.unrealizedProfit ?? calculatedProfit),
+        returnPct: Number(config.overallReturn ?? calculatedReturn),
         status: config.investmentStatus
       }];
 
@@ -104,8 +185,8 @@ function buildInvestorProfile(config) {
     investmentDate: config.investmentDate,
     capitalInvested: Number(config.capitalInvested),
     currentPortfolioValue: grossPortfolioValue,
-    unrealizedProfit: Number(config.unrealizedProfit ?? 0),
-    overallReturn: Number(config.overallReturn ?? 0),
+    unrealizedProfit: Number(config.unrealizedProfit ?? calculatedProfit),
+    overallReturn: Number(config.overallReturn ?? calculatedReturn),
     holdingPeriod,
     investmentStatus: config.investmentStatus,
     charges,
@@ -117,11 +198,11 @@ function buildInvestorProfile(config) {
     portfolioStatus: config.portfolioStatus ?? 'Active',
     lastPortfolioUpdate: config.lastPortfolioUpdate ?? nowLabel(),
     history,
-    holdings: [
-      { symbol: 'NIFTY', qty: 12, avg: 22000, price: 22850, pnl: 10200 },
-      { symbol: 'BANKNIFTY', qty: 8, avg: 49000, price: 50750, pnl: 14000 },
-      { symbol: 'RELIANCE', qty: 26, avg: 2440, price: 2520, pnl: 2080 }
-    ],
+    holdings: computeHoldingsWithLivePrice([
+      { symbol: 'NIFTY', qty: 12, avg: 22000, price: 22000 },
+      { symbol: 'BANKNIFTY', qty: 8, avg: 49000, price: 49000 },
+      { symbol: 'RELIANCE', qty: 26, avg: 2440, price: 2440 }
+    ], config.investmentDate),
     analytics: {
       daily: 2.1,
       weekly: 4.4,
@@ -210,12 +291,36 @@ const seedUsers = [
       riskProfile: 'Aggressive',
       portfolioManager: 'BLACKBUSER Quantitative Fund',
       clientSince: '20 April 2026',
-      investmentDate: '20 Apr 2026',
-      capitalInvested: 5000,
-      currentPortfolioValue: 10318.49,
+      investmentDate: '16 Aug 2026',
+      capitalInvested: 25000,
+      currentPortfolioValue: 30318.49,
       unrealizedProfit: 5318.49,
-      overallReturn: 106.37,
+      overallReturn: 21.27,
       investmentStatus: 'Active',
+      lastPortfolioUpdate: '16 Aug 2026, 09:30:00 AM',
+      holdings: [
+        { symbol: 'NIFTY', qty: 0.551, avg: 22000 },
+        { symbol: 'BANKNIFTY', qty: 0.285, avg: 49000 },
+        { symbol: 'RELIANCE', qty: 1.739, avg: 2440 }
+      ],
+      history: [
+        {
+          date: '20 Apr 2026',
+          investment: 5000,
+          currentValue: 10318.49,
+          profit: 5318.49,
+          returnPct: 106.37,
+          status: 'Active'
+        },
+        {
+          date: '16 Aug 2026',
+          investment: 25000,
+          currentValue: 30318.49,
+          profit: 5318.49,
+          returnPct: 21.27,
+          status: 'Active'
+        }
+      ],
       charges: {
         brokerage: 0,
         stt: 18.36,
