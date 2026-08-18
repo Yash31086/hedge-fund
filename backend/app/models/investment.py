@@ -15,4 +15,5 @@ class Investment(Base):
     current_value: Mapped[float] = mapped_column(Float, default=0.0)
     current_profit: Mapped[float] = mapped_column(Float, default=0.0)
     return_percentage: Mapped[float] = mapped_column(Float, default=0.0)
+    description: Mapped[str | None] = mapped_column(String(255), nullable=True)
     status: Mapped[str] = mapped_column(String(50), default="ACTIVE")

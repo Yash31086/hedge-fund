@@ -3,10 +3,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "BLACKBUSER API"
-    database_url: str = "postgresql+psycopg://postgres:postgres@db:5432/blackbuser"
+    database_url: str = "sqlite:///./blackbuser.db"
     jwt_secret: str = "blackbuser-dev-secret-change-me"
     jwt_refresh_secret: str = "blackbuser-refresh-secret-change-me"
-    redis_url: str = "redis://redis:6379/0"
+    redis_url: str = ""
     email_provider: str = "console"
     email_from: str = "no-reply@blackbuser.com"
     email_service_id: str = ""

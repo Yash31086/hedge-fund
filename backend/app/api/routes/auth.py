@@ -43,8 +43,8 @@ async def verify_otp(email: str, otp: str, db: Session = Depends(get_db)) -> Tok
     return TokenPair(access_token=access_token, refresh_token=refresh_token)
 
 
-@router.post("/login", response_model=TokenPair)
-async def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)) -> TokenPair:
+@router.post("/login")
+async def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)) -> dict:
     user = db.query(User).filter(User.email == payload.email).first()
     if not user or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -52,7 +52,18 @@ async def login(payload: LoginRequest, request: Request, db: Session = Depends(g
     db.commit()
     access_token = create_access_token(user.email, user.role)
     refresh_token = create_refresh_token(user.email, user.role)
-    return TokenPair(access_token=access_token, refresh_token=refresh_token)
+    return {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "investor_id": user.investor_id,
+            "full_name": user.full_name,
+            "email": user.email,
+            "role": user.role,
+        },
+    }
 
 
 @router.post("/logout")
