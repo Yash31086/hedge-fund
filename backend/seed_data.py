@@ -197,7 +197,7 @@ def seed():
 
         a_portfolio = Portfolio(
             user_id=anuj.id,
-            total_invested=5000.0,
+            total_invested=25000.0,
             current_value=10487.82,
             gross_value=10487.82,
             net_value=10283.04,
@@ -208,7 +208,7 @@ def seed():
         )
         db.add(a_portfolio)
 
-        a_inv = Investment(
+        a_inv1 = Investment(
             user_id=anuj.id,
             investment_date=datetime(2026, 4, 15),
             invested_amount=5000.0,
@@ -218,12 +218,26 @@ def seed():
             description="Initial Investment",
             status="ACTIVE",
         )
-        db.add(a_inv)
+        a_inv2 = Investment(
+            user_id=anuj.id,
+            investment_date=datetime(2026, 8, 16),
+            invested_amount=20000.0,
+            current_value=20000.0,
+            current_profit=0.0,
+            return_percentage=0.0,
+            description="Additional Capital Deployment",
+            status="ACTIVE",
+        )
+        db.add_all([a_inv1, a_inv2])
 
         a_holdings = [
             Holding(user_id=anuj.id, symbol="NIFTY", display_name="NIFTY 50", quantity=0.12, avg_buy_price=22000.0, buy_date=datetime(2026, 4, 15), sector="Index"),
             Holding(user_id=anuj.id, symbol="BANKNIFTY", display_name="BANK NIFTY", quantity=0.06, avg_buy_price=49000.0, buy_date=datetime(2026, 4, 15), sector="Index"),
             Holding(user_id=anuj.id, symbol="RELIANCE", display_name="Reliance Industries", quantity=0.35, avg_buy_price=2440.0, buy_date=datetime(2026, 4, 15), sector="Energy"),
+            # Holdings for second investment
+            Holding(user_id=anuj.id, symbol="NIFTY", display_name="NIFTY 50", quantity=0.363, avg_buy_price=22000.0, buy_date=datetime(2026, 8, 16), sector="Index"),
+            Holding(user_id=anuj.id, symbol="BANKNIFTY", display_name="BANK NIFTY", quantity=0.163, avg_buy_price=49000.0, buy_date=datetime(2026, 8, 16), sector="Index"),
+            Holding(user_id=anuj.id, symbol="RELIANCE", display_name="Reliance Industries", quantity=1.639, avg_buy_price=2440.0, buy_date=datetime(2026, 8, 16), sector="Energy"),
         ]
         db.add_all(a_holdings)
 
@@ -241,7 +255,7 @@ def seed():
 
         k_portfolio = Portfolio(
             user_id=kapil.id,
-            total_invested=13000.0,
+            total_invested=23000.0,
             current_value=16968.30,
             gross_value=16968.30,
             net_value=16762.70,
@@ -272,12 +286,26 @@ def seed():
             description="Additional Capital",
             status="ACTIVE",
         )
-        db.add_all([k_inv1, k_inv2])
+        k_inv3 = Investment(
+            user_id=kapil.id,
+            investment_date=datetime(2026, 8, 9),
+            invested_amount=10000.0,
+            current_value=10000.0,
+            current_profit=0.0,
+            return_percentage=0.0,
+            description="Additional Capital Deployment",
+            status="ACTIVE",
+        )
+        db.add_all([k_inv1, k_inv2, k_inv3])
 
         k_holdings = [
             Holding(user_id=kapil.id, symbol="NIFTY", display_name="NIFTY 50", quantity=0.30, avg_buy_price=22000.0, buy_date=datetime(2026, 5, 13), sector="Index"),
             Holding(user_id=kapil.id, symbol="BANKNIFTY", display_name="BANK NIFTY", quantity=0.15, avg_buy_price=49000.0, buy_date=datetime(2026, 5, 13), sector="Index"),
             Holding(user_id=kapil.id, symbol="RELIANCE", display_name="Reliance Industries", quantity=0.85, avg_buy_price=2440.0, buy_date=datetime(2026, 5, 13), sector="Energy"),
+            # Holdings for third investment
+            Holding(user_id=kapil.id, symbol="NIFTY", display_name="NIFTY 50", quantity=0.181, avg_buy_price=22000.0, buy_date=datetime(2026, 8, 9), sector="Index"),
+            Holding(user_id=kapil.id, symbol="BANKNIFTY", display_name="BANK NIFTY", quantity=0.081, avg_buy_price=49000.0, buy_date=datetime(2026, 8, 9), sector="Index"),
+            Holding(user_id=kapil.id, symbol="RELIANCE", display_name="Reliance Industries", quantity=0.819, avg_buy_price=2440.0, buy_date=datetime(2026, 8, 9), sector="Energy"),
         ]
         db.add_all(k_holdings)
 
@@ -293,9 +321,9 @@ def seed():
         # -- Generate Daily Portfolio Snapshots --
         print("  Generating portfolio snapshots...")
         investors = [
-            (himanshu, 25000.0, date(2026, 4, 20)),
-            (anuj, 5000.0, date(2026, 4, 15)),
-            (kapil, 13000.0, date(2026, 5, 13)),
+            (himanshu, 30000.0, date(2026, 4, 20)),
+            (anuj, 25000.0, date(2026, 4, 15)),
+            (kapil, 23000.0, date(2026, 5, 13)),
         ]
 
         for user_obj, invested, start in investors:
